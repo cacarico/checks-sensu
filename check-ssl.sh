@@ -24,50 +24,60 @@
 # Caio Quinilato Teixeira 
 # cqteixeira@live.com
 # https://github.com/cqteixeira
+#
+# Entries:
+# check-ssl.sh <site url> <months left to warning> <months left to critical>
 
-site=$1
+
+url=$1
 warning=$2
 critical=$3
 
+# Depending what country you live your date can be in other lenguage diferent from english.
 trans_uni(){
    case $1 in
-        Fev) echo "Feb";;
-        Abr) echo "Apr";;
-        Mai) echo "May";;
-        Ago) echo "Aug";;
-        Set) echo "Sep";;
-        Out) echo "Oct";;
-        Dez) echo "Dec";;
-        *)   echo $1;;
+        Jan) echo 'Jan';;
+        Fev) echo 'Feb';;
+	Mar) echo 'Mar';;
+        Abr) echo 'Apr';;
+        Mai) echo 'May';;
+	Jun) echo 'Jun';;
+	Jul) echo 'Jul';;
+        Ago) echo 'Aug';;
+        Set) echo 'Sep';;
+        Out) echo 'Oct';;
+	Nov) echo 'Nov';;
+        Dez) echo 'Dec';;
+        *)   echo 'Month entry is wrong!'; exit 3;;
    esac
 }
 
-calc_data() {
+calc_date() {
    d1=$(date -d "$1" +%s)
    d2=$(date -d "$2" +%s)
    rem_day=`echo $(( (d1 - d2) / 86400))`
    if [ $rem_day -le 0 ]; then
       rem_day=`echo $(( (d1 - d2) / 86400)) | sed 's/-//g'`
-      echo "Critical - Certificado expirado a $rem_day dias" && exit 2
+      echo "Critical - SSL expired $rem_day days ago" && exit 2
    fi
    rem_day=`echo $(( (d1 - d2) / 2592000))`
    return $rem_day
 }
 
 # Dados do vencimento
-data_vence=`echo | openssl s_client -connect $1:443 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter' | sed 's/=/ /g' | awk {' print $3" "$2" "$5 '}`
+expire_month=`echo | openssl s_client -connect $1:443 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter' | sed 's/=/ /g' | awk {' print $3" "$2" "$5 '}`
 
 # Dados atuais
-mes_atual=`date | awk {' print $2 '}`
-mes_atual=`trans_uni $mes_atual`
-dia_atual=`date | awk {' print $3 '}`
-ano_atual=`date | awk {' print $6 '}`
+current_month=`date | awk {' print $2 '}`
+current_month=`trans_uni $current_month`
+current_day=`date | awk {' print $3 '}`
+current_year=`date | awk {' print $6 '}`
 
-data_atual="$dia_atual $mes_atual $ano_atual"
+current_date="$current_day $current_month $current_year"
 
-calc_data "$data_vence" "$data_atual"
-fal_mes=$?
+calc_date "$expire_month" "$current_date"
+months_left=$?
 
-if [ $fal_mes -le $critical ]; then echo "Critical - $site $fal_mes mes restante" && exit 2; fi
-if [ $fal_mes -le $warning ]; then echo "Warning - $site $fal_mes meses restantes" && exit 1; fi
-echo "OK = $site $fal_mes meses restantes"; exit 0
+if [ $months_left -le $critical ]; then echo "Critical - $url $months_left months left" && exit 2; fi
+if [ $months_left -le $warning ]; then echo "Warning - $url $months_left months left" && exit 1; fi
+echo "OK = $url $months_left months left"; exit 0
