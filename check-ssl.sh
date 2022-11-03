@@ -15,11 +15,6 @@
 # DEPENDENCIES:
 # Curl
 #
-# LICENSE:
-# Copyright 2014 Yieldbot, Inc <devops@yieldbot.com>
-# Released under the same terms as Sensu (the MIT license); see LICENSE
-# for details.
-#
 # AUTHOR:
 # Caio Quinilato Teixeira 
 # cqteixeira@live.com
